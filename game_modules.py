@@ -50,8 +50,8 @@ class Player:
 
     def end_round(self, result, value):
 
-        if result == "Player won!":
-            self.balance += 2*int(value)
+        if result == "Player won!" or result == "Bust! Player won!":
+            self.balance += value
             print(f"You won! Your current balance: {self.balance}")
         else:
             self.balance -= value
@@ -71,7 +71,7 @@ class Player:
         hand_p = Hand(self.hand)
 
         self.hand_value = hand_p.hand_val
-        print(self.hand_value)
+        #print(self.hand_value)
 
 # Computer doesn't need a balance
 
@@ -81,7 +81,7 @@ class Computer:
 
         self.hand = []
 
-        hand_c = Hand(self.hand)
+        hand_c = Comp_Hand(self.hand)
 
         self.hand_value = hand_c.hand_val
 
@@ -92,15 +92,19 @@ class Computer:
     def draw_card(self, deck):
         card = deck.selected_cards[0]
 
+        if len(self.hand) > 2:
+            print(f"Computer picked {card}")
+
         self.hand.append(card)
         deck.played_card(card)
 
-    def computer_hand(self, player):
-
-        hand_c = Hand(self.hand)
+    def computer_hand(self):
+        hand_c = Comp_Hand(self.hand)
 
         self.hand_value = hand_c.hand_val
         print(self.hand_value)
+
+
 
 # Card - includes a code and value of a card
 
@@ -130,15 +134,29 @@ class Hand:
             c = Card(i)
             self.hand_val += c.value
 
-    def comp_hand(self, c_hand, p_val):
+class Comp_Hand:
 
-        hand_l = []
-        for i in hand_c:
 
-            if i[1:] == "A":
-                hand_l.append("x")
+    def __init__(self, hand):
+
+        self.hand_val = 0
+        self.aces = 0
+
+        for i in hand:
+
+            if i[1:] == 'A':
+                self.aces += 1
             else:
-                hand_l.append(i)
+                c = Card(i)
+                self.hand_val += c.value
+
+        if self.aces > 0:
+            self.hand_val = self.hand_val + (self.aces - 1)
+            if self.hand_val + 11 > 21:
+                self.hand_val += 1
+            else:
+                self.hand_val += 11
+
 
 def bet(player):
 
@@ -176,6 +194,7 @@ def Player_Round(player,deck):
         player.draw_card(deck)
         print(player.hand)
         player.player_hand()
+        print(player.hand_value)
 
         p_value = player.hand_value
 
@@ -197,3 +216,34 @@ def Player_Round(player,deck):
             round_result = "Computer's turn"
 
     return round_result
+
+
+def Computer_Round(computer,player,deck):
+
+    c_value = computer.hand_value
+    p_value = player.hand_value
+
+    print(f"Computer hand value: {c_value}")
+
+    if c_value <= p_value < 21:
+
+        computer.draw_card(deck)
+        computer.computer_hand()
+        c_value = computer.hand_value
+        print(c_value)
+
+        if c_value <= p_value < 21:
+            round_result = "Round goes on"
+        elif p_value < c_value <= 21:
+            round_result = "Computer won!"
+        else:
+            round_result = "Bust! Player won!"
+
+    elif p_value < c_value <= 21:
+        round_result = "Computer won!"
+
+    else:
+        round_result = "Bust! Player won!"
+
+    return round_result
+
